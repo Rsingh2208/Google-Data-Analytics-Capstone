@@ -1,0 +1,390 @@
+/*
+
+Cleaning Data in SQL Queries
+
+*/
+
+SELECT COUNT(*)
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`;
+
+--checking unique IDs in all tables to see for usablity of data set
+
+SELECT COUNT (DISTINCT Id) AS Total_Ids 
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`;
+
+SELECT COUNT (DISTINCT Id) AS Total_Ids 
+FROM `my-data-project-2208-389311.fitbit_project.daily_calories`;
+
+SELECT COUNT (DISTINCT Id) AS Total_Ids 
+FROM `my-data-project-2208-389311.fitbit_project.daily_intensities`;
+
+SELECT COUNT (DISTINCT Id) AS Total_Ids 
+FROM `my-data-project-2208-389311.fitbit_project.daily_sleep`;
+
+SELECT COUNT (DISTINCT Id) AS Total_Ids 
+FROM `my-data-project-2208-389311.fitbit_project.daily_steps`;
+
+SELECT COUNT (DISTINCT Id) AS Total_Ids 
+FROM `my-data-project-2208-389311.fitbit_project.hourly_calories1`;
+
+SELECT COUNT (DISTINCT Id) AS Total_Ids 
+FROM `my-data-project-2208-389311.fitbit_project.hourly_steps_1`;
+
+SELECT COUNT (DISTINCT Id) AS Total_Ids 
+FROM `my-data-project-2208-389311.fitbit_project.METs_minute`;
+
+
+/*
+  FitBit Data Exploration 
+
+Skills used: Joins, Temp Tables, Aggregate Functions, Converting Data Types, Case When, Temp tables
+
+*/
+
+--number of times FitBit tracker was used by IDs
+SELECT Id,
+ COUNT(Id) AS Total_Id
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY Id;
+
+--Fitbit usage by type of user
+SELECT Id,
+ COUNT(Id) AS Total_Logged_Uses,
+ CASE
+  WHEN COUNT(Id) BETWEEN 25 AND 31 THEN 'Active User'
+  WHEN COUNT(Id) BETWEEN 15 and 24 THEN 'Moderate User'
+  WHEN COUNT(Id) BETWEEN 0 and 14 THEN 'Light User'
+  END Fitbit_Usage_Type
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY Id;
+
+--Fitbit was not worn
+
+Select count(id)
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+WHERE sedentary_minutes IN (1440) AND total_steps IN (0);
+
+Select count(id)
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`;
+
+--days on which fitbit wasnt worn
+Select activity_day
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+WHERE sedentary_minutes IN (1440) AND total_steps IN (0);
+
+-- Aggregates from daily_activities table
+--Daily totals for steps, distance and calories
+
+SELECT 
+ MIN(total_steps) AS Min_Total_Steps,
+ MIN(total_distance) AS Min_Total_Distance, 
+ MIN(calories) AS Min_Total_Calories,
+ MAX(total_steps) AS Max_Total_Steps, 
+ MAX(total_distance) AS Max_Total_Distance, 
+ MAX(calories) AS Max_Total_Calories,
+ ROUND(AVG(total_steps),2) AS Avg_Total_Stpes,
+ ROUND(AVG(total_distance),2) AS Avg_Total_Distance,
+ ROUND(AVG(calories),2) AS Avg_Total_Calories,
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`;
+
+
+SELECT 
+ MIN(very_active_minutes) AS Min_Very_Active_Minutes,
+ MAX(very_active_minutes) AS Max_Very_Active_Minutes,
+ AVG(very_active_minutes) AS Avg_Very_Active_Minutes,
+ MIN(fairly_active_minutes) AS Min_Fairly_Active_Minutes,
+ MAX(fairly_active_minutes) AS Max_Fairly_Active_Minutes,
+ AVG(fairly_active_minutes) AS Avg_Fairly_Active_Minutes,
+ MIN(lightly_active_minutes) AS Min_Lightly_Active_Minutes,
+ MAX(lightly_active_minutes) AS Max_Lightly_Active_Minutes,
+ AVG(lightly_active_minutes) AS Avg_Lightly_Active_Minutes,
+ MIN(sedentary_minutes) AS Min_Sedentary_Minutes,
+ MAX(sedentary_minutes) AS Max_Sedentary_Minutes,
+ AVG(sedentary_minutes) AS Avg_Sedentary_Minutes
+From `my-data-project-2208-389311.fitbit_project.daily_activity`;
+
+-- Sleep totals: for records, minutes asleep and time in bed
+SELECT 
+ MIN(total_sleep_records) as totalsleeprecords_min, 
+ MIN(total_minutes_asleep) as totalminutesasleep_min,
+ MIN(total_minutes_bed) as totaltimeinbed_min,
+ MAX(total_sleep_records) as totalsleeprecords_max,
+ MAX(total_minutes_asleep) as totalminutesasleep_max,
+ MAX(total_minutes_bed) as totaltimeinbed_max,
+ AVG(total_sleep_records) as totalsleeprecords_avg,
+ AVG(total_minutes_asleep) as totalminutesasleep_avg,
+ AVG(total_minutes_bed) as totaltimeinbed_avg
+FROM `my-data-project-2208-389311.fitbit_project.daily_sleep`;
+
+--METs
+SELECT 
+ MIN(METs) as MET_min, 
+ MAX(METs) as METs_max,
+ AVG(METs) as METs_avg
+FROM `my-data-project-2208-389311.fitbit_project.METs_minute`
+WHERE METs >0 ;
+
+
+--Time spent on activity per day
+SELECT distinct id, 
+ SUM(sedentary_minutes) AS sedentary_min,
+ SUM(lightly_active_minutes) AS lightly_active_mins, 
+ SUM(fairly_active_minutes) AS fairly_active_mins, 
+ SUM(very_active_minutes) AS very_active_mins
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY id;
+
+--Average Active minutes per user 
+
+SELECT Id, 
+ ROUND(avg(very_active_minutes) + avg(fairly_active_minutes),2) AS Total_Avg_Active_Minutes
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY Id;
+
+SELECT Id, 
+ AVG(very_active_minutes) + AVG(fairly_active_minutes) + AVG(lightly_active_minutes) AS Total_Avg_Active_Minutes,
+ CASE 
+  WHEN AVG(very_active_minutes) + AVG(fairly_active_minutes) + AVG(lightly_active_minutes) >= 150 THEN 'Meets CDC Recommendation'
+  WHEN AVG(very_active_minutes) + AVG(fairly_active_minutes) + AVG(lightly_active_minutes) <150 THEN 'Does Not Meet CDC Recommendation'
+  END CDC_Recommendations
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY Id
+ORDER BY Id;
+
+
+--breaking down active minutes by date
+
+SELECT Id, 
+ SUM(very_active_minutes) + SUM(fairly_active_minutes) + SUM(lightly_active_minutes) AS Total_Avg_Active_Minutes,
+ CASE 
+  WHEN SUM(very_active_minutes) + SUM(fairly_active_minutes) + SUM(lightly_active_minutes) >= 150 THEN 'Meets CDC Recommendation'
+  WHEN SUM(very_active_minutes) + SUM(fairly_active_minutes) + SUM(lightly_active_minutes) <150 THEN 'Does Not Meet CDC Recommendation'
+  END CDC_Recommendations
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+WHERE activity_date BETWEEN '2016-04-17' AND '2016-04-23'
+GROUP BY Id
+ORDER BY Id;
+
+
+SELECT Id, 
+ SUM(very_active_minutes) + SUM(fairly_active_minutes)  AS Total_Avg_Active_Minutes,
+ CASE 
+  WHEN SUM(very_active_minutes) + SUM(fairly_active_minutes)  >= 150 THEN 'Meets CDC Recommendation'
+  WHEN SUM(very_active_minutes) + SUM(fairly_active_minutes)<150 THEN 'Does Not Meet CDC Recommendation'
+  END CDC_Recommendations
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+WHERE activity_date BETWEEN '2016-04-17' AND '2016-04-23'
+GROUP BY Id
+ORDER BY Id;
+
+SELECT Id, 
+ SUM(very_active_minutes) + SUM(fairly_active_minutes) + SUM(lightly_active_minutes) AS Total_Avg_Active_Minutes,
+ CASE 
+  WHEN SUM(very_active_minutes) + SUM(fairly_active_minutes) + SUM(lightly_active_minutes) >= 150 THEN 'Meets CDC Recommendation'
+  WHEN SUM(very_active_minutes) + SUM(fairly_active_minutes) + SUM(lightly_active_minutes) <150 THEN 'Does Not Meet CDC Recommendation'
+  END CDC_Recommendations
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+WHERE activity_date BETWEEN '2016-05-01' AND '2016-05-07'
+GROUP BY Id;
+
+--user type by number of steps
+SELECT Id,
+ ROUND(avg(total_steps),2) AS Avg_Total_Steps,
+ CASE
+  WHEN avg(total_steps) < 5000 THEN 'Inactive'
+  WHEN avg(total_steps) BETWEEN 5000 AND 7499 THEN 'Low Active User'
+  WHEN avg(total_steps) BETWEEN 7500 AND 9999 THEN 'Average Active User'
+  WHEN avg(total_steps) BETWEEN 10000 AND 12499 THEN 'Active User'
+  WHEN avg(total_steps) >= 12500 THEN 'Very Active User'
+  END User_Type
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY Id
+ORDER BY User_Type ;
+
+--Inactive users - sleep 
+
+SELECT *
+FROM `my-data-project-2208-389311.fitbit_project.daily_sleep`
+WHERE ID IN (1844505072,1927972279,4057192912,4445114986,6775888955,8792009665,2320127002,4020332650);
+
+--sleep AVG inactive users:
+SELECT 
+ ROUND(AVG(total_minutes_asleep),2) as totalminutesasleep_avg,
+ ROUND(AVG(total_minutes_bed),2) as totaltimeinbed_avg
+FROM `my-data-project-2208-389311.fitbit_project.inactiveusers_sleep`;
+
+--Inactive users - daily_activities
+
+SELECT *
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+WHERE ID IN (1844505072,1927972279,4057192912,4445114986,6775888955,8792009665,2320127002,4020332650);
+
+-- FITIBT NOT USED by inactive users
+
+SELECT COUNT(Id) AS times_fitbit_not_used
+FROM `my-data-project-2208-389311.fitbit_project.inactiveuser_dailyactivities`
+WHERE sedentary_minutes IN (1440);
+
+SELECT COUNT(Id) AS Total_records 
+FROM `my-data-project-2208-389311.fitbit_project.inactiveuser_dailyactivities`;
+
+
+--AVG intensities for inactive users 
+SELECT 
+ AVG(very_active_minutes) AS Avg_Very_Active_Minutes,
+ AVG(fairly_active_minutes) AS Avg_fairly_active_minutes,
+ AVG(lightly_active_minutes) AS avg_lightly_active_minutes,
+ AVG(sedentary_minutes) AS avg_sedentary_minutes
+FROM `my-data-project-2208-389311.fitbit_project.inactiveuser_dailyactivities`;
+
+--day of the week vs avg steps, avg calories, avg very active minutes
+SELECT
+ ROUND (AVG(total_steps),2) as avg_steps,
+ ROUND(AVG(total_distance),2) AS avg_totaldistance,
+ ROUND(AVG(calories),2) AS avg_calories,
+ ROUND(AVG(very_active_minutes),2) AS avg_very_active_minutes,
+ activity_day
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY activity_day;
+
+SELECT Id,
+ ROUND (AVG(total_steps),2) as avg_steps,
+ ROUND(AVG(total_distance),2) AS avg_totaldistance,
+ ROUND(AVG(calories),2) AS avg_calories,
+ ROUND(AVG(very_active_minutes),2) AS avg_very_active_minutes,
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY Id;
+
+-- Coorelation between activity, steps & calories
+
+SELECT Id, 
+ SUM(sedentary_minutes) AS sedentary_min,
+ SUM(lightly_active_minutes) AS lightly_active_mins, 
+ SUM(fairly_active_minutes) AS fairly_active_mins, 
+ SUM(very_active_minutes) AS very_active_mins,
+ SUM(total_steps) AS total_steps,SUM(calories) AS total_calories
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY id;
+
+-- day-wise intensity of activity 
+
+SELECT activity_day,
+ ROUND (avg(very_active_minutes), 2) AS Avg_Very_Active_Minutes,
+ ROUND (avg(fairly_active_minutes), 2) AS Avg_Fairly_Active_Minutes,
+ ROUND (avg(lightly_active_minutes), 2) AS Avg_Lightly_Active_Minutes,
+ ROUND (avg(sedentary_minutes), 2) AS Avg_Sedentary_Minutes,
+FROM  `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY activity_day;
+
+--Coorelation Relation between steps, calories & active hours
+
+SELECT Id, 
+ Sum(total_steps) AS Sum_total_steps,
+ SUM(calories) AS Sum_Calories, 
+ ROUND(SUM(very_active_minutes +fairly_active_minutes)/60 ,2) AS Sum_Active_hours
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY Id;
+
+--Day-wise number of steps
+
+SELECT activity_day,
+ ROUND (avg(total_steps), 2) AS Average_Total_Steps,
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity`
+GROUP BY activity_day
+ORDER BY Average_Total_Steps DESC;
+
+--Desired time of workout
+SELECT time_new,
+ ROUND(AVG(calories),2) AS total_calories_by_hour
+FROM `my-data-project-2208-389311.fitbit_project.hourly_calories1`
+GROUP BY time_new
+ORDER BY time_new DESC;
+
+-- Avg hourly steps throughout the day
+SELECT time_new,
+ ROUND(AVG(total_steps),2) AS Avg_Steps_By_Hour
+FROM `my-data-project-2208-389311.fitbit_project.hourly_steps_1`
+GROUP BY time_new
+ORDER BY time_new ASC;
+
+--Avg calories burned by hour
+SELECT time_new,
+ ROUND(AVG(calories),2) AS Avg_calories_By_Hour
+FROM `my-data-project-2208-389311.fitbit_project.hourly_calories1`
+GROUP BY time_new
+ORDER BY time_new ASC;
+
+--at which day all the users had the most minutes of sleep
+SELECT
+ ROUND(AVG(total_minutes_asleep)/60 ,2) AS Avg_Hours_Asleep, 
+activity_day
+FROM `my-data-project-2208-389311.fitbit_project.daily_sleep` AS a
+ JOIN `my-data-project-2208-389311.fitbit_project.daily_activity` AS s ON a.Id=s.Id
+GROUP BY activity_day;
+
+--which date had the most minutes of sleep from all the users. 
+
+SELECT 
+ sleep_day,
+ SUM(total_minutes_asleep) AS Total_Minutes_Asleep,
+FROM `my-data-project-2208-389311.fitbit_project.daily_sleep` 
+WHERE sleep_day IS NOT NULL
+GROUP BY sleep_day
+ORDER BY sleep_day;
+
+--Average sleep time per user
+
+SELECT Id, ROUND(AVG(total_minutes_asleep),2) as avg_sleep_time_min,
+ ROUND(Avg(total_minutes_bed),2) as avg_time_bed_min,
+ ROUND(AVG(total_minutes_bed - total_minutes_asleep),2) as wasted_bed_time_min
+FROM `my-data-project-2208-389311.fitbit_project.daily_sleep`
+GROUP BY Id;
+
+--average minutes slept, total steps and calories by user Id.
+
+SELECT a.Id,
+ ROUND(avg(a.total_steps),2) AS AvgTotalSteps,
+ ROUND(avg(a.calories),2) AS AvgCalories,
+ ROUND(avg(s.total_minutes_asleep),2) AS AvgTotalMinutesAsleep,
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity` AS a
+ INNER JOIN `my-data-project-2208-389311.fitbit_project.daily_sleep` AS s ON a.Id=s.Id
+GROUP BY a.Id;
+
+-- total sleep minutes vs calories burned
+
+SELECT a.Id,
+ SUM(total_minutes_asleep) AS total_sleep_min,
+ SUM(total_minutes_bed) AS total_time_in_bed_min,
+ SUM(calories) AS calories
+FROM `my-data-project-2208-389311.fitbit_project.daily_activity` AS a
+ INNER JOIN `my-data-project-2208-389311.fitbit_project.daily_sleep` AS s ON a.Id=s.Id
+GROUP BY 1
+ORDER BY 1;
+
+--METs
+
+-- AVG METs
+SELECT ROUND(avg(METs/10),2) AS avg_MET, Id
+FROM `my-data-project-2208-389311.fitbit_project.METs_minute`
+group by Id
+ORDER BY avg_MET;
+
+-- Max met per user
+SELECT Id, MAX(METs) as max_met
+FROM `my-data-project-2208-389311.fitbit_project.METs_minute`
+GROUP BY Id;
+
+
+SELECT DISTINCT temp1.Id, temp1.date_new, AVG(temp1.METs/10) as avg_mets, temp2.Calories
+FROM `my-data-project-2208-389311.fitbit_project.METs_minute` as temp1
+INNER JOIN `my-data-project-2208-389311.fitbit_project.daily_activity`AS temp2
+ON temp1.Id = temp2.Id and temp1.date_new = temp2.activity_date
+Group By temp1.Id, temp1.date_new, temp2.Calories
+Order by Id,date_new;
+
+SELECT DISTINCT temp1.Id, temp1.date_new, SUM(temp1.METs/10) as SUM_mets, temp2.Calories
+FROM `my-data-project-2208-389311.fitbit_project.METs_minute` as temp1
+INNER JOIN `my-data-project-2208-389311.fitbit_project.daily_activity`AS temp2
+ON temp1.Id = temp2.Id and temp1.date_new = temp2.activity_date
+Group By temp1.Id, temp1.date_new, temp2.Calories
+Order by Id,date_new;
